@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Word Parser</title>
+
+  <style>
+    .input-row {
+      padding: 10px;
+      font-size: 16px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      max-width: 500px;
+      margin: 0 auto;
+      box-sizing: border-box;
+      padding-bottom: 2.5rem;
+    }
+
+    .input-row .description {
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+      color: #8bc34a;
+    }
+
+    .input-row input {
+      width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-bottom: 5px;
+      font-size: 1rem;
+    }
+
+    .input-row textarea {
+      width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-bottom: 5px;
+      font-size: 1rem;
+      min-height: 150px;
+    }
+
+    .input-row button {
+      float: right;
+      padding: 10px;
+      background: #8bc34a;
+      color: #fff;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .separator {
+      width: 100%;
+      max-width: 500px;
+      height: 1px;
+      background: #ddd;
+      margin: 20px auto;
+    }
+
+    #total-count {
+      font-weight: bold;
+      font-size: 0.85rem;
+      margin: 10px 0;
+    }
+
+    .result-wrapper {
+      padding: 10px 60px 10px 20px;
+      border: 1px dashed #ddd;
+      position: relative;
+    }
+
+    #copy {
+      border-radius: 3px;
+      border: 1px solid #fff;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #fff;
+      background: #8bc34a;
+      position: absolute;
+      top: 5px;
+      right: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="input-row">
+    <div class="description">Paste your Quizlet URL here</div>
+    <input id="q-url" type="text" placeholder="https://...">
+    <button id="load-url" onclick="loadUrl()">Load URL</button>
+  </div>
+  <div class="separator"></div>
+  <div class="input-row">
+    <div class="description">Or paste JSON data here</div>
+    <textarea id="q-json"></textarea>
+    <button id="load-json" onclick="loadJSON()">Load JSON</button>
+  </div>
+  <div id="result-container" style="display: none;">
+    <div class="separator"></div>
+    <div class="input-row" id="result-row">
+      <div class="description">Results</div>
+      <div id="total-count">
+      </div>
+      <div class="result-wrapper">
+        <button id="copy" onclick="copyToClipboard()">Copy</button>
+        <div id="result" style="white-space: pre-wrap;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <iframe id="frame" style="width: 0; height: 0; display: none;"></iframe>
+  <script>
+    function loadUrl() {
+      document.getElementById("result-container").style.display = "none";
+      var Http = new XMLHttpRequest();
+      var url = "https://cors-anywhere.herokuapp.com/" + document.getElementById("q-url").value;
+      Http.open("GET", url);
+      Http.send();
+
+      Http.onreadystatechange = (e) => {
+        if (Http.readyState === XMLHttpRequest.DONE && Http.status === 200) {
+          try {
+            // console.log(Http.responseText)
+            var iframe = document.getElementById('frame');
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(Http.responseText);
+            iframe.contentWindow.document.close();
+
+            getData(iframe, 100, false);
+
+            console.log(pageData);
+
+          } catch (err) {
+            console.log(err)
+          }
+        }
+      }
+    }
+
+    function loadJSON() {
+      document.getElementById("result-container").style.display = "none";
+      try {
+        var json = document.getElementById("q-json").value;
+        printData(JSON.parse(json));
+      } catch (err) {
+        console.log(err)
+      }
+    }
+
+    function getData(iframe, failCounter, loaded) {
+      var pageData;
+      if (failCounter > 0 && !loaded) {
+        setTimeout(function () {
+          try {
+            pageData = iframe.contentWindow.Quizlet.setPageData.termIdToTermsMap;
+            loaded = true
+            console.log(pageData);
+            printData(pageData);
+          } catch (error) {
+            loaded = false
+            failCounter--;
+            getData(iframe, failCounter, loaded);
+          }
+        }, 100);
+      }
+    }
+
+    function printData(data) {
+      document.getElementById("result-container").style.display = "block";
+      let keys = Object.keys(data);
+      let text = "";
+      for (var i = 0; i < keys.length; i++) {
+        text += data[keys[i]].word + "," + data[keys[i]].definition + "\n";
+      }
+
+      document.getElementById("total-count").innerHTML = "Total count: " + keys.length;
+      document.getElementById("result").innerHTML = text;
+    }
+
+    function copyToClipboard() {
+      console.log('copy')
+      const el = document.createElement('textarea');
+      el.value = document.getElementById("result").innerHTML;
+      el.setAttribute('readonly', '');
+      el.style.position = 'absolute';
+      el.style.left = '-9999px';
+      document.body.appendChild(el);
+      const selected =
+        document.getSelection().rangeCount > 0 ?
+        document.getSelection().getRangeAt(0) :
+        false;
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      if (selected) {
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(selected);
+      }
+    };
+  </script>
+</body>
+
+</html>
