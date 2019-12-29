@@ -105,12 +105,12 @@
       <div id="total-count">
       </div>
       <div class="result-wrapper">
-        <button id="copy" onclick="copyToClipboard()">Copy</button>
+        <button id="copy" onclick="copyToClipboard('result')">Copy</button>
         <div id="result" style="white-space: pre-wrap; word-break: break-word;">
         </div>
       </div>
       <div class="result-wrapper">
-          <button id="copy" onclick="copyToClipboard()">Copy</button>
+          <button id="copy" onclick="copyToClipboard('audio-results')">Copy</button>
           <div id="audio-results" style="white-space: pre-wrap; word-break: break-word;">
           </div>
         </div>
@@ -190,10 +190,10 @@
       document.getElementById("audio-results").innerHTML = text2;
     }
 
-    function copyToClipboard() {
+    function copyToClipboard(id) {
       console.log('copy')
       const el = document.createElement('textarea');
-      el.value = document.getElementById("result").innerHTML;
+      el.value = document.getElementById(id || "result").innerHTML;
       el.setAttribute('readonly', '');
       el.style.position = 'absolute';
       el.style.left = '-9999px';
