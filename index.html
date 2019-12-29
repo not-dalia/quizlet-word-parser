@@ -106,9 +106,14 @@
       </div>
       <div class="result-wrapper">
         <button id="copy" onclick="copyToClipboard()">Copy</button>
-        <div id="result" style="white-space: pre-wrap;">
+        <div id="result" style="white-space: pre-wrap; word-break: break-word;">
         </div>
       </div>
+      <div class="result-wrapper">
+          <button id="copy" onclick="copyToClipboard()">Copy</button>
+          <div id="audio-results" style="white-space: pre-wrap; word-break: break-word;">
+          </div>
+        </div>
     </div>
   </div>
 
@@ -122,7 +127,7 @@
       Http.open("GET", url);
       Http.send();
 
-      Http.onreadystatechange = function(e) {
+      Http.onreadystatechange = (e) => {
         if (Http.readyState === XMLHttpRequest.DONE && Http.status === 200) {
           try {
             // console.log(Http.responseText)
@@ -174,12 +179,15 @@
       document.getElementById("result-container").style.display = "block";
       let keys = Object.keys(data);
       let text = "";
+      let text2 = "";
       for (var i = 0; i < keys.length; i++) {
-        text += data[keys[i]].word + "," + data[keys[i]].definition + "\n";
+        text += data[keys[i]].id + "," + data[keys[i]].word + "," + data[keys[i]].definition + "\n";
+        text2 += data[keys[i]].id + "," + data[keys[i]]._wordAudioUrl + "\n";
       }
 
       document.getElementById("total-count").innerHTML = "Total count: " + keys.length;
       document.getElementById("result").innerHTML = text;
+      document.getElementById("audio-results").innerHTML = text2;
     }
 
     function copyToClipboard() {
